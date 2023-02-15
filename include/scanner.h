@@ -1,5 +1,5 @@
-#ifndef scanner_h
-#define scanner_h
+#ifndef cinder_scanner_h
+#define cinder_scanner_h
 
 #include "common.h"
 

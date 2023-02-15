@@ -1,8 +1,9 @@
-#ifndef macros_h
-#define macros_h
+#ifndef cinder_macros_h
+#define cinder_macros_h
 
 #include <stdio.h>
 
-#define unused(x) { (void) x; fprintf(stderr, "WARN: Unused variable (Line %d)\n", __LINE__); }
+// silences unused variable warnings
+#define unused(x) (void) x;
 
 #endif // macros_h
