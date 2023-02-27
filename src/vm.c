@@ -1,12 +1,13 @@
 #include "common.h"
 #include "vm.h"
 #include "debug.h"
+#include "compiler.h"
 
 #include <stdio.h>
 
-static struct VM vm;
+static VM vm;
 
-static enum InterpretResult run() {
+static InterpretResult run() {
     #define READ_BYTE() (*vm.ip++)
     #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
     #define BINARY_OP(op) \
@@ -79,8 +80,20 @@ Value pop() {
     return *vm.stackTop;
 }
 
-enum InterpretResult interpret(struct Chunk* chunk) {
-    vm.chunk = chunk;
+InterpretResult interpret(const char* source) {
+    Chunk chunk;
+    init_chunk(&chunk);
+
+    if (!compile(source, &chunk)) {
+        free_chunk(&chunk);
+        return INTERPRET_COMPILE_ERROR;
+    }
+
+    vm.chunk = &chunk;
     vm.ip = vm.chunk->code;
-    return run();
+
+    InterpretResult result = run();
+
+    free_chunk(&chunk);
+    return result;
 }

@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <sysexits.h>
+
 #define DEBUG_TRACE_EXECUTION
 
 #endif // common_h
