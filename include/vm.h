@@ -6,12 +6,12 @@
 
 #define STACK_MAX 256
 
-struct VM {
+typedef struct {
     struct Chunk* chunk;
     uint8_t* ip;
     Value stack[STACK_MAX];
     Value* stackTop;
-};
+} VM;
 
 enum InterpretResult {
     INTERPRET_OK,
@@ -22,7 +22,7 @@ enum InterpretResult {
 void init_vm();
 void free_vm();
 
-enum InterpretResult interpret(struct Chunk* chunk);
+enum InterpretResult interpret(Chunk* chunk);
 
 void push(Value value);
 Value pop();

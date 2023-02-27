@@ -12,7 +12,7 @@ int32_t main(const int32_t argc, const char* argv[]) {
 
     init_vm();
 
-    struct Chunk chunk;
+    Chunk chunk;
     init_chunk(&chunk);
 
     int constant = add_constant(&chunk, 1.2);

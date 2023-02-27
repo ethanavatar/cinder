@@ -4,13 +4,13 @@
 #include "common.h"
 #include "scanner.h"
 
-struct Scanner {
+typedef struct {
   const char* start;
   const char* current;
   int line;
-};
+} Scanner;
 
-static struct Scanner scanner;
+static Scanner scanner;
 
 static char advance() {
     scanner.current++;
@@ -21,8 +21,8 @@ static bool is_at_end() {
     return *scanner.current == '\0';
 }
 
-static struct Token make_token(enum TokenType type) {
-    struct Token token;
+static Token make_token(TokenType type) {
+    Token token;
     token.type = type;
     token.start = scanner.start;
     token.length = (int) (scanner.current - scanner.start);
@@ -30,8 +30,8 @@ static struct Token make_token(enum TokenType type) {
     return token;
 }
 
-static struct Token error_token(const char* message) {
-    struct Token token;
+static Token error_token(const char* message) {
+    Token token;
     token.type = TOKEN_ERROR;
     token.start = message;
     token.length = (int) strlen(message);
@@ -45,7 +45,7 @@ void init_scanner(const char* source) {
     scanner.line = 1;
 }
 
-struct Token scanToken() {
+Token scan_token() {
     scanner.start = scanner.current;
 
     if (is_at_end()) return make_token(TOKEN_EOF);
