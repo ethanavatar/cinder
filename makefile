@@ -17,7 +17,7 @@ OPTIMIZATION=-O3
 CFLAGS=-I$(IDIR) -g -Wall -Wextra -Werror -Wpedantic -std=c99 $(OPTIMIZATION)
 
 # the object files to include in the executable
-OBJ=./obj/main.o ./obj/scanner.o ./obj/chunk.o ./obj/memory.o ./obj/debug.o ./obj/value.o ./obj/vm.o
+OBJ=./obj/main.o ./obj/scanner.o ./obj/chunk.o ./obj/memory.o ./obj/debug.o ./obj/value.o ./obj/vm.o ./obj/compiler.o
 
 # the executable file to create
 TARGET=./out/prog.elf

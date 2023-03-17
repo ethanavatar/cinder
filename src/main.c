@@ -57,7 +57,7 @@ static char* read_file(const char* path) {
 
 static void run_file(const char* path) {
     char* source = read_file(path);
-    InterpretResult result = interpret(source);
+    enum InterpretResult result = interpret(source);
     free(source); 
 
     if (result == INTERPRET_COMPILE_ERROR) exit(65);
@@ -77,6 +77,6 @@ int32_t main(const int32_t argc, const char* argv[]) {
         exit(64);
     }
 
-    freeVM();
+    free_vm();
     return 0;
 }

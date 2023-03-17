@@ -7,7 +7,7 @@
 #define STACK_MAX 256
 
 struct VM {
-    struct Chunk* chunk;
+    Chunk* chunk;
     uint8_t* ip;
     Value stack[STACK_MAX];
     Value* stackTop;

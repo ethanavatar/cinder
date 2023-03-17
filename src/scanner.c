@@ -21,6 +21,10 @@ static char peek() {
     return *scanner.current;
 }
 
+static bool is_at_end() {
+    return *scanner.current == '\0';
+}
+
 static char peek_next() {
     if (is_at_end()) return '\0';
     return scanner.current[1];
@@ -31,10 +35,6 @@ static bool match(char expected) {
     if (*scanner.current != expected) return false;
     scanner.current++;
     return true;
-}
-
-static bool is_at_end() {
-    return *scanner.current == '\0';
 }
 
 static struct Token make_token(enum TokenType type) {
@@ -69,9 +69,9 @@ static void skip_whitespace() {
             advance();
             break;
         case '/':
-            if (peekNext() == '/') {
+            if (peek_next() == '/') {
                 // A comment goes until the end of the line.
-                while (peek() != '\n' && !isAtEnd()) advance();
+                while (peek() != '\n' && !is_at_end()) advance();
             } else {
                 return;
             }

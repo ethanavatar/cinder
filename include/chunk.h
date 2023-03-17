@@ -14,25 +14,25 @@ enum OpCode {
     OP_RETURN,
 };
 
-struct Chunk {
+typedef struct {
     int count;
     int capacity;
     uint8_t* code;
     struct ValueArray constants;
     int* lines;
-};
+} Chunk;
 
 // initializes the given chunk
-void init_chunk(struct Chunk* chunk);
+void init_chunk(Chunk* chunk);
 
 // frees the given chunk
-void free_chunk(struct Chunk* chunk);
+void free_chunk(Chunk* chunk);
 
 // writes a byte to the given chunk
 // if the chunk is full, grow the chunk
-void write_chunk(struct Chunk* chunk, uint8_t byte, int line);
+void write_chunk(Chunk* chunk, uint8_t byte, int line);
 
 // adds a constant to the given chunk
-int add_constant(struct Chunk* chunk, Value value);
+int add_constant(Chunk* chunk, Value value);
 
 #endif
