@@ -5,7 +5,7 @@
 
 void init_scanner(const char* source);
 
-enum TokenType {
+typedef enum {
   // Single-character tokens.
   TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN,
   TOKEN_LEFT_BRACE, TOKEN_RIGHT_BRACE,
@@ -25,15 +25,15 @@ enum TokenType {
   TOKEN_TRUE, TOKEN_VAR, TOKEN_WHILE,
 
   TOKEN_ERROR, TOKEN_EOF
-};
+} TokenType;
 
-struct Token {
-  enum TokenType type;
+typedef struct {
+  TokenType  type;
   const char* start;
   int length;
   int line;
-};
+} Token;
 
-struct Token scan_token();
+Token scan_token();
 
 #endif // scanner_h

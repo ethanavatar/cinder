@@ -4,7 +4,7 @@
 #include "common.h"
 #include "value.h"
 
-enum OpCode {
+typedef enum {
     OP_CONSTANT,
     OP_NEGATE,
     OP_ADD,
@@ -12,13 +12,13 @@ enum OpCode {
     OP_MULTIPLY,
     OP_DIVIDE,
     OP_RETURN,
-};
+} OpCode;
 
 typedef struct {
     int count;
     int capacity;
     uint8_t* code;
-    struct ValueArray constants;
+    ValueArray constants;
     int* lines;
 } Chunk;
 

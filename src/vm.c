@@ -5,9 +5,9 @@
 
 #include <stdio.h>
 
-static struct VM vm;
+static VM vm;
 
-static enum InterpretResult run() {
+static InterpretResult run() {
     #define READ_BYTE() (*vm.ip++)
     #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
     #define BINARY_OP(op) \
@@ -80,7 +80,7 @@ Value pop() {
     return *vm.stackTop;
 }
 
-enum InterpretResult interpret(const char* source) {
+InterpretResult interpret(const char* source) {
     Chunk chunk;
     init_chunk(&chunk);
 
@@ -92,7 +92,7 @@ enum InterpretResult interpret(const char* source) {
     vm.chunk = &chunk;
     vm.ip = vm.chunk->code;
 
-    enum InterpretResult result = run();
+    InterpretResult result = run();
 
     free_chunk(&chunk);
     return result;

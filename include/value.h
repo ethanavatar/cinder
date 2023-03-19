@@ -7,20 +7,20 @@
 typedef double Value;
 
 // a value array is a dynamically sized array of interpreter values.
-struct ValueArray {
+typedef struct {
   int capacity;
   int count;
   Value* values;
-};
+} ValueArray;
 
 // initialize the given value array.
-void init_value_array(struct ValueArray* array);
+void init_value_array(ValueArray* array);
 
 // write a value to the given value array.
-void write_value_array(struct ValueArray* array, Value value);
+void write_value_array(ValueArray* array, Value value);
 
 // free the memory from the given value array.
-void free_value_array(struct ValueArray* array);
+void free_value_array(ValueArray* array);
 
 // print the given value.
 void print_value(Value value);

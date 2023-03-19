@@ -11,13 +11,13 @@
 #endif
 
 typedef struct {
-    struct Token current;
-    struct Token previous;
+    Token current;
+    Token previous;
     bool had_error;
     bool panic_mode;
 } Parser;
 
-enum Precedence{
+typedef enum {
     PREC_NONE,
     PREC_ASSIGNMENT,  // =
     PREC_OR,          // or
@@ -29,14 +29,14 @@ enum Precedence{
     PREC_UNARY,       // ! -
     PREC_CALL,        // . ()
     PREC_PRIMARY
-};
+} Precedence;
 
 typedef void (*ParseFn)();
 
 typedef struct {
   ParseFn prefix;
   ParseFn infix;
-  enum Precedence precedence;
+  Precedence precedence;
 } ParseRule;
 
 Parser parser;
@@ -46,7 +46,7 @@ static Chunk* current_chunk() {
   return compiling_chunk;
 }
 
-static void error_at(struct Token* token, const char* message) {
+static void error_at(Token* token, const char* message) {
     if (parser.panic_mode) return;
     parser.panic_mode = true;
     fprintf(stderr, "[line %d] Error", token->line);
@@ -82,7 +82,7 @@ static void advance() {
     }
 }
 
-static void consume(enum TokenType type, const char* message) {
+static void consume(TokenType type, const char* message) {
     if (parser.current.type == type) {
         advance();
         return;
@@ -129,13 +129,13 @@ static void end_compiler() {
 }
 
 static void expression();
-static ParseRule* get_rule(enum TokenType type);
-static void parse_precedence(enum Precedence precedence);
+static ParseRule* get_rule(TokenType type);
+static void parse_precedence(Precedence precedence);
 
 static void binary() {
-    enum TokenType operatorType = parser.previous.type;
+    TokenType operatorType = parser.previous.type;
     ParseRule* rule = get_rule(operatorType);
-    parse_precedence((enum Precedence)(rule->precedence + 1));
+    parse_precedence((Precedence)(rule->precedence + 1));
 
     switch (operatorType) {
     case TOKEN_PLUS:          emit_byte(OP_ADD); break;
@@ -157,7 +157,7 @@ static void number() {
 }
 
 static void unary() {
-    enum TokenType operatorType = parser.previous.type;
+    TokenType operatorType = parser.previous.type;
 
     // Compile the operand.
     parse_precedence(PREC_UNARY);
@@ -212,7 +212,7 @@ ParseRule rules[] = {
   [TOKEN_EOF]           = {NULL,     NULL,   PREC_NONE},
 };
 
-static void parse_precedence(enum Precedence precedence) {
+static void parse_precedence(Precedence precedence) {
     advance();
     ParseFn prefixRule = get_rule(parser.previous.type)->prefix;
     if (prefixRule == NULL) {
@@ -229,7 +229,7 @@ static void parse_precedence(enum Precedence precedence) {
     }
 }
 
-static ParseRule* get_rule(enum TokenType type) {
+static ParseRule* get_rule(TokenType type) {
   return &rules[type];
 }
 

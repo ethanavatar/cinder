@@ -4,13 +4,13 @@
 #include "common.h"
 #include "scanner.h"
 
-struct Scanner {
+typedef struct {
   const char* start;
   const char* current;
   int line;
-};
+} Scanner;
 
-static struct Scanner scanner;
+static Scanner scanner;
 
 static char advance() {
     scanner.current++;
@@ -37,8 +37,8 @@ static bool match(char expected) {
     return true;
 }
 
-static struct Token make_token(enum TokenType type) {
-    struct Token token;
+static Token make_token(TokenType type) {
+    Token token;
     token.type = type;
     token.start = scanner.start;
     token.length = (int) (scanner.current - scanner.start);
@@ -46,8 +46,8 @@ static struct Token make_token(enum TokenType type) {
     return token;
 }
 
-static struct Token error_token(const char* message) {
-    struct Token token;
+static Token error_token(const char* message) {
+    Token token;
     token.type = TOKEN_ERROR;
     token.start = message;
     token.length = (int) strlen(message);
@@ -82,13 +82,14 @@ static void skip_whitespace() {
     }
 }
 
+
 void init_scanner(const char* source) {
     scanner.start = source;
     scanner.current = source;
     scanner.line = 1;
 }
 
-static struct Token string() {
+static Token string() {
     while (peek() != '"' && !is_at_end()) {
         if (peek() == '\n') scanner.line++;
         advance();
@@ -105,7 +106,7 @@ static bool is_digit(char c) {
     return c >= '0' && c <= '9';
 }
 
-static struct Token number() {
+static Token number() {
     while (is_digit(peek())) advance();
 
     // Look for a fractional part.
@@ -125,7 +126,7 @@ static bool is_alpha(char c) {
            c == '_';
 }
 
-static enum TokenType check_keyword(int start, int length, const char* rest, enum TokenType type) {
+static TokenType check_keyword(int start, int length, const char* rest, TokenType type) {
     if (scanner.current - scanner.start == start + length &&
         memcmp(scanner.start + start, rest, length) == 0) {
         return type;
@@ -134,7 +135,7 @@ static enum TokenType check_keyword(int start, int length, const char* rest, enu
     return TOKEN_IDENTIFIER;
 }
 
-static enum TokenType identifier_type() {
+static TokenType identifier_type() {
 
     switch (scanner.start[0]) {
     case 'a': return check_keyword(1, 2, "nd", TOKEN_AND);
@@ -168,13 +169,13 @@ static enum TokenType identifier_type() {
     return TOKEN_IDENTIFIER;
 }
 
-static struct Token identifier() {
+static Token identifier() {
     while (is_alpha(peek()) || is_digit(peek())) advance();
 
     return make_token(identifier_type());
 }
 
-struct Token scan_token() {
+Token scan_token() {
     skip_whitespace();
     scanner.start = scanner.current;
 

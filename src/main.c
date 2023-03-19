@@ -15,8 +15,8 @@ static void repl() {
         printf("> ");
 
         if (!fgets(line, sizeof(line), stdin)) {
-        printf("\n");
-        break;
+            printf("\n");
+            break;
         }
 
         interpret(line);
@@ -57,7 +57,7 @@ static char* read_file(const char* path) {
 
 static void run_file(const char* path) {
     char* source = read_file(path);
-    enum InterpretResult result = interpret(source);
+    InterpretResult result = interpret(source);
     free(source); 
 
     if (result == INTERPRET_COMPILE_ERROR) exit(65);
