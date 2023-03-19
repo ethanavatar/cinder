@@ -8,9 +8,9 @@ typedef double Value;
 
 // a value array is a dynamically sized array of interpreter values.
 typedef struct {
-  int capacity;
-  int count;
-  Value* values;
+    int capacity;
+    int count;
+    Value* values;
 } ValueArray;
 
 // initialize the given value array.
