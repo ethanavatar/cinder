@@ -33,8 +33,8 @@ void write_chunk(Chunk* chunk, uint8_t byte, int line) {
 }
 
 int add_constant(Chunk* chunk, Value value) {
-  write_value_array(&chunk->constants, value);
-  return chunk->constants.count - 1;
+    write_value_array(&chunk->constants, value);
+    return chunk->constants.count - 1;
 }
 
 
