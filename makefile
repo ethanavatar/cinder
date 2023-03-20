@@ -17,7 +17,14 @@ OPTIMIZATION=-O3
 CFLAGS=-I$(IDIR) -g -Wall -Wextra -Werror -Wpedantic -std=c99 $(OPTIMIZATION)
 
 # the object files to include in the executable
-OBJ=./obj/main.o ./obj/scanner.o ./obj/chunk.o ./obj/memory.o ./obj/debug.o ./obj/value.o ./obj/vm.o ./obj/compiler.o
+OBJ=./obj/main.o		\
+	./obj/scanner.o 	\
+	./obj/chunk.o		\
+	./obj/memory.o		\
+	./obj/debug.o		\
+	./obj/value.o		\
+	./obj/vm.o			\
+	./obj/compiler.o	\
 
 # the executable file to create
 TARGET=./out/prog.elf
@@ -28,10 +35,29 @@ prog: $(OBJ)
 ./obj/%.o: ./src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# If the first argument is "run"...
+ifeq (run,$(firstword $(MAKECMDGOALS)))
+# use the rest as arguments for "run"
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+# ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
+
+.PHONY: run
+run: prog
+	$(TARGET) $(RUN_ARGS)
+
 .PHONY: clean
 clean:
 	rm -f $(TARGET) $(OBJ)
+	rm -f $(TARGET)
 
-.PHONY: run
-run:
-	$(TARGET)
+.PHONY: cleanmake
+cleanmake:
+	make clean
+	make
+
+.PHONY: cleanrun
+cleanrun:
+	make clean
+	make run
