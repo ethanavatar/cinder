@@ -155,7 +155,7 @@ static void binary() {
 static void literal() {
     switch (parser.previous.type) {
         case TOKEN_FALSE:   emit_byte(OP_FALSE); break;
-        case TOKEN_NIL:     emit_byte(OP_NIL); break;
+        case TOKEN_NULL:     emit_byte(OP_NULL); break;
         case TOKEN_TRUE:    emit_byte(OP_TRUE); break;
         default: return; // Unreachable.
     }
@@ -215,7 +215,7 @@ ParseRule rules[] = {
     [TOKEN_FOR]           = {NULL,     NULL,   PREC_NONE},
     [TOKEN_FUN]           = {NULL,     NULL,   PREC_NONE},
     [TOKEN_IF]            = {NULL,     NULL,   PREC_NONE},
-    [TOKEN_NIL]           = {literal,  NULL,   PREC_NONE},
+    [TOKEN_NULL]          = {literal,  NULL,   PREC_NONE},
     [TOKEN_OR]            = {NULL,     NULL,   PREC_NONE},
     [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
