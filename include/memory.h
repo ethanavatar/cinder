@@ -2,6 +2,13 @@
 #define cinder_memory_h
 
 #include "common.h"
+#include "object.h"
+
+// allocate a new chunk of memory.
+#define ALLOCATE(type, count) \
+    (type*)reallocate(NULL, 0, sizeof(type) * (count))
+
+#define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
 
 // grow the capacity of the chunks array.
 #define GROW_CAPACITY(capacity) \
@@ -24,5 +31,7 @@
 // - if old_size is not zero, and new_size is less than old_size, shrink the memory.
 // at this point, i feel like this should just be multiple functions
 void* reallocate(void* pointer, size_t old_size, size_t new_size);
+
+void free_objects();
 
 #endif
