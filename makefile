@@ -26,6 +26,7 @@ OBJ=./obj/main.o		\
 	./obj/vm.o			\
 	./obj/compiler.o	\
 	./obj/object.o		\
+	./obj/table.o		\
 
 # the executable file to create
 TARGET=./out/prog.elf

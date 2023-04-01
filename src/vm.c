@@ -12,11 +12,11 @@
 VM vm;
 
 static void reset_stack() {
-  vm.stackTop = vm.stack;
+  vm.stack_top = vm.stack;
 }
 
 static Value peek(int distance) {
-    return vm.stackTop[-1 - distance];
+    return vm.stack_top[-1 - distance];
 }
 
 static bool is_falsey(Value value) {
@@ -68,7 +68,7 @@ static InterpretResult run() {
 
         #ifdef DEBUG_TRACE_EXECUTION
         printf("          ");
-        for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
+        for (Value* slot = vm.stack; slot < vm.stack_top; slot++) {
             printf("[ ");
             print_value(*slot);
             printf(" ]");
@@ -139,20 +139,22 @@ static InterpretResult run() {
 void init_vm() {
     reset_stack();
     vm.objects = NULL;
+    init_table(&vm.strings);
 }
 
 void free_vm() {
+    free_table(&vm.strings);
     free_objects();
 }
 
 void push(Value value) {
-    *vm.stackTop = value;
-    vm.stackTop++;
+    *vm.stack_top = value;
+    vm.stack_top++;
 }
 
 Value pop() {
-    vm.stackTop--;
-    return *vm.stackTop;
+    vm.stack_top--;
+    return *vm.stack_top;
 }
 
 InterpretResult interpret(const char* source) {
