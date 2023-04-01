@@ -84,14 +84,21 @@ static InterpretResult run() {
         case OP_CONSTANT: {
             Value constant = READ_CONSTANT();
             push(constant);
+            #ifdef DEBUG_TRACE_EXECUTION
             print_value(constant);
             printf("\n");
+            #endif
             break;
         }
         case OP_NULL:  push(NULL_VAL); break;
         case OP_TRUE:  push(BOOL_VAL(true)); break;
         case OP_FALSE: push(BOOL_VAL(false)); break;
         case OP_POP:   pop(); break;
+        case OP_GET_LOCAL: {
+            uint8_t slot = READ_BYTE();
+            push(vm.stack[slot]); 
+            break;
+        }
         case OP_GET_GLOBAL: {
             ObjString* name = READ_STRING();
             Value value;
