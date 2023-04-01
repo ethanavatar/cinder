@@ -1,1 +1,1 @@
-"str" + "ing" + " concatenation"
+print "str" + "ing" + " concatenation";
