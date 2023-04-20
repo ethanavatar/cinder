@@ -1,0 +1,5 @@
+var positive = +1;
+var negative = -1;
+
+print positive;
+print negative;

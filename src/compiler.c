@@ -29,7 +29,7 @@ typedef enum {
     PREC_COMPARISON,  // < > <= >=
     PREC_TERM,        // + -
     PREC_FACTOR,      // * /
-    PREC_UNARY,       // ! -
+    PREC_UNARY,       // ! - +
     PREC_CALL,        // . ()
     PREC_PRIMARY
 } Precedence;
@@ -324,6 +324,7 @@ static void unary(bool can_assign) {
     switch (operatorType) {
     case TOKEN_BANG: emit_byte(OP_NOT); break;
     case TOKEN_MINUS: emit_byte(OP_NEGATE); break;
+    case TOKEN_PLUS: emit_byte(OP_POSITIVE); break;
     default: return; // Unreachable.
     }
 }
@@ -417,7 +418,7 @@ ParseRule rules[] = {
     [TOKEN_COMMA]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_DOT]           = {NULL,     NULL,   PREC_NONE},
     [TOKEN_MINUS]         = {unary,    binary, PREC_TERM},
-    [TOKEN_PLUS]          = {NULL,     binary, PREC_TERM},
+    [TOKEN_PLUS]          = {unary,    binary, PREC_TERM},
     [TOKEN_SEMICOLON]     = {NULL,     NULL,   PREC_NONE},
     [TOKEN_SLASH]         = {NULL,     binary, PREC_FACTOR},
     [TOKEN_STAR]          = {NULL,     binary, PREC_FACTOR},

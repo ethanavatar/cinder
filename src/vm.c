@@ -238,6 +238,13 @@ static InterpretResult run() {
             }
             push(NUMBER_VAL(-AS_NUMBER(pop())));
             break;
+        case OP_POSITIVE:
+            if (!IS_NUMBER(peek(0))) {
+                runtime_error("Operand must be a number.");
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            push(NUMBER_VAL(AS_NUMBER(pop())));
+            break;
         case OP_PRINT: 
             print_value(pop());
             printf("\n");

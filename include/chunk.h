@@ -19,6 +19,7 @@ typedef enum {
     OP_GREATER,
     OP_LESS,
     OP_NEGATE,
+    OP_POSITIVE,
     OP_PRINT,
     OP_JUMP,
     OP_JUMP_IF_FALSE,
