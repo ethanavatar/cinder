@@ -5,7 +5,7 @@ CC = clang
 IDIR=./include
 
 # optimization level
-OPTIMIZATION=-O3
+OPTIMIZATION=-O0
 
 # compiler flags:
 #  -g adds debugging information to the executable file
@@ -27,6 +27,7 @@ OBJ=./obj/main.o		\
 	./obj/compiler.o	\
 	./obj/object.o		\
 	./obj/table.o		\
+	./obj/fileIO.o
 
 # the executable file to create
 TARGET=./out/prog.elf

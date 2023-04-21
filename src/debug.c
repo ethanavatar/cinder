@@ -6,7 +6,6 @@
 // private
 // create an instruction from a string that takes no arguments
 static int simple_instruction(const char* name, int offset) {
-    // (Ethan) i dont really like how it prints it incrementally rather than all at once
     printf("%s\n", name);
     return offset + 1;
 }
@@ -18,7 +17,7 @@ static int byte_instruction(const char* name, Chunk* chunk, int offset) {
 }
 
 static int jump_instruction(const char* name, int sign, Chunk* chunk, int offset) {
-    uint16_t jump = (uint16_t)(chunk->code[offset + 1] << 8);
+    uint16_t jump = (uint16_t) (chunk->code[offset + 1] << 8);
     jump |= chunk->code[offset + 2];
     printf("%-16s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
     return offset + 3;

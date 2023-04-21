@@ -1,0 +1,4 @@
+//let str = read("./tests/while.ci");
+//print str;
+
+eval("print 1 + 1");

@@ -400,9 +400,9 @@ static void named_variable(Token name, bool can_assign) {
     
     if (can_assign && match(TOKEN_EQUAL)) {
         expression();
-        emit_bytes(set_op, (uint8_t)arg);
+        emit_bytes(set_op, (uint8_t) arg);
     } else {
-        emit_bytes(get_op, (uint8_t)arg);
+        emit_bytes(get_op, (uint8_t) arg);
     }
 }
 
@@ -438,7 +438,7 @@ ParseRule rules[] = {
     [TOKEN_ELSE]          = {NULL,     NULL,   PREC_NONE},
     [TOKEN_FALSE]         = {literal,  NULL,   PREC_NONE},
     [TOKEN_FOR]           = {NULL,     NULL,   PREC_NONE},
-    [TOKEN_FUN]           = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_DEF]           = {NULL,     NULL,   PREC_NONE},
     [TOKEN_IF]            = {NULL,     NULL,   PREC_NONE},
     [TOKEN_NULL]          = {literal,  NULL,   PREC_NONE},
     [TOKEN_OR]            = {NULL,     or_,    PREC_OR},
@@ -447,7 +447,7 @@ ParseRule rules[] = {
     [TOKEN_SUPER]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_THIS]          = {NULL,     NULL,   PREC_NONE},
     [TOKEN_TRUE]          = {literal,  NULL,   PREC_NONE},
-    [TOKEN_VAR]           = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_LET]           = {NULL,     NULL,   PREC_NONE},
     [TOKEN_WHILE]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_ERROR]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_EOF]           = {NULL,     NULL,   PREC_NONE},
@@ -567,11 +567,8 @@ static void fun_declaration() {
 static void var_declaration() {
     uint8_t global = parse_variable("Expect variable name.");
 
-    if (match(TOKEN_EQUAL)) {
-        expression();
-    } else {
-        emit_byte(OP_NULL);
-    }
+    consume(TOKEN_EQUAL, "Expect '=' after variable name.");
+    expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
 
     define_variable(global);
@@ -588,7 +585,7 @@ static void for_statement() {
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
     if (match(TOKEN_SEMICOLON)) {
         // No initializer.
-    } else if (match(TOKEN_VAR)) {
+    } else if (match(TOKEN_LET)) {
         var_declaration();
     } else {
         expression_statement();
@@ -688,8 +685,8 @@ static void synchronize() {
         if (parser.previous.type == TOKEN_SEMICOLON) return;
         switch (parser.current.type) {
         case TOKEN_CLASS:
-        case TOKEN_FUN:
-        case TOKEN_VAR:
+        case TOKEN_DEF:
+        case TOKEN_LET:
         case TOKEN_FOR:
         case TOKEN_IF:
         case TOKEN_WHILE:
@@ -704,9 +701,9 @@ static void synchronize() {
 }
 
 static void declaration() {
-    if (match(TOKEN_FUN)) {
+    if (match(TOKEN_DEF)) {
         fun_declaration();
-    } else if (match(TOKEN_VAR)) {
+    } else if (match(TOKEN_LET)) {
         var_declaration();
     } else {
         statement();

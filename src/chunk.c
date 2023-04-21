@@ -12,18 +12,17 @@ void init_chunk(Chunk* chunk) {
     chunk->lines = NULL;
 }
 
-
 void write_chunk(Chunk* chunk, uint8_t byte, int line) {
     // if the chunk is full, grow the chunk
     if (chunk->capacity < chunk->count + 1) {
 
         // save the old capacity
-        int oldCapacity = chunk->capacity;
+        int old_capacity = chunk->capacity;
 
         // grow the chunk
-        chunk->capacity = GROW_CAPACITY(oldCapacity);
-        chunk->code = GROW_ARRAY(uint8_t, chunk->code, oldCapacity, chunk->capacity);
-        chunk->lines = GROW_ARRAY(int, chunk->lines, oldCapacity, chunk->capacity);
+        chunk->capacity = GROW_CAPACITY(old_capacity);
+        chunk->code = GROW_ARRAY(uint8_t, chunk->code, old_capacity, chunk->capacity);
+        chunk->lines = GROW_ARRAY(int, chunk->lines, old_capacity, chunk->capacity);
     }
 
     // write the byte to the chunk and increment the index

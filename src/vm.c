@@ -4,26 +4,60 @@
 #include "compiler.h"
 #include "object.h"
 #include "memory.h"
-
+#include "fileIO.h"
 #include "macros.h"
 
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <time.h>
+#include <stdlib.h>
 
 VM vm;
+
+static void runtime_error(const char* format, ...);
 
 static Value clock_native(int arg_count, Value* args) {
     unused(arg_count); unused(args);
     return NUMBER_VAL((double) clock() / CLOCKS_PER_SEC);
 }
 
-static void runtime_error(const char* format, ...);
+static Value read_native(int arg_count, Value* args) {
+    if (arg_count > 1)
+        runtime_error("Too many arguments.");
+
+    if (!IS_STRING(args[0]))
+        runtime_error("First argument is not a string.");
+
+    char* path = AS_CSTRING(args[0]);
+    char* contents = read_file(path);
+
+    ObjString* ret = take_string(contents, strlen(contents));
+
+    return OBJ_VAL(ret);
+}
+
+/*
+static Value eval_native(int arg_count, Value* args) {    
+    if (arg_count > 1)
+        runtime_error("Too many arguments.");
+
+    if (!IS_STRING(args[0]))
+        runtime_error("First argument is not a string.");
+
+    InterpretResult ret = interpret(AS_CSTRING(args[0]));
+
+    if (ret != INTERPRET_OK)
+        runtime_error("Error while evaluating string.");
+
+    return NUMBER_VAL((int) ret);
+}
+*/
+
 
 static void reset_stack() {
-  vm.stack_top = vm.stack;
-  vm.frame_count = 0;
+    vm.stack_top = vm.stack;
+    vm.frame_count = 0;
 }
 
 static Value peek(int distance) {
@@ -45,6 +79,7 @@ static bool call(ObjFunction* function, int arg_count) {
     frame->function = function;
     frame->ip = function->chunk.code;
     frame->slots = vm.stack_top - arg_count - 1;
+
     return true;
 }
 
@@ -120,12 +155,9 @@ static InterpretResult run() {
 
     #define READ_BYTE() (*frame->ip++)
 
-    #define READ_SHORT() \
-        (frame->ip += 2, \
-        (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
+    #define READ_SHORT() (frame->ip += 2, (uint16_t) ((frame->ip[-2] << 8) | frame->ip[-1]))
 
-    #define READ_CONSTANT() \
-        (frame->function->chunk.constants.values[READ_BYTE()])
+    #define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
 
     #define READ_STRING() AS_STRING(READ_CONSTANT())
 
@@ -150,7 +182,7 @@ static InterpretResult run() {
                 printf(" ]");
             }
             printf("\n");
-            disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code));
+            disassemble_instruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code));
         #endif
 
         uint8_t instruction;
@@ -305,6 +337,8 @@ void init_vm() {
     init_table(&vm.strings);
 
     define_native("clock", clock_native);
+    define_native("read", read_native);
+    //define_native("eval", eval_native);
 }
 
 void free_vm() {

@@ -1,5 +1,5 @@
-fun areWeHavingItYet() {
-  print "Yes we are!";
+def areWeHavingItYet() {
+    print "Yes we are!";
 }
 
 print areWeHavingItYet;

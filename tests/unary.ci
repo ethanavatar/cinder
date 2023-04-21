@@ -1,5 +1,5 @@
-var positive = +1;
-var negative = -1;
+let positive = +1;
+let negative = -1;
 
 print positive;
 print negative;

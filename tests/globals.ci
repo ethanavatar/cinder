@@ -1,5 +1,10 @@
-var breakfast = "beignets";
-var beverage = "cafe au lait";
+let breakfast = "beignets";
+let beverage = "cafe au lait";
 breakfast = "beignets with " + beverage;
+
+print breakfast;
+
+// shadowing breakfast
+let breakfast = "Real developers don't eat";
 
 print breakfast;

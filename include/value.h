@@ -8,10 +8,10 @@ typedef struct ObjString ObjString;
 
 // an enum of the possible types of values in the interpreter.
 typedef enum {
-  VAL_BOOL,
-  VAL_NULL, 
-  VAL_NUMBER,
-  VAL_OBJ
+    VAL_BOOL,
+    VAL_NULL, 
+    VAL_NUMBER,
+    VAL_OBJ
 } ValueType;
 
 // a value is a tagged union of the possible types of values in the interpreter.
@@ -33,10 +33,11 @@ typedef struct {
 #define AS_NUMBER(value)  ((value).as.number)
 #define AS_OBJ(value)     ((value).as.obj)
 
-#define BOOL_VAL(value)   ((Value){VAL_BOOL, {.boolean = value}})
-#define NULL_VAL          ((Value){VAL_NULL, {.number = 0}})
-#define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}})
-#define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)object}})
+#define BOOL_VAL(value)   ((Value) {VAL_BOOL, {.boolean = value}})
+#define NULL_VAL          ((Value) {VAL_NULL, {.number = 0}})
+#define NUMBER_VAL(value) ((Value) {VAL_NUMBER, {.number = value}})
+#define OBJ_VAL(object)   ((Value) {VAL_OBJ, {.obj = (Obj*) object}})
+
 
 // a value array is a dynamically sized array of interpreter values.
 typedef struct {
