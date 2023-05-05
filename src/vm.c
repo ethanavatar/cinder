@@ -7,6 +7,8 @@
 #include "fileIO.h"
 #include "macros.h"
 
+#include <SDL2/SDL.h>
+
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -37,6 +39,102 @@ static Value read_native(int arg_count, Value* args) {
     return OBJ_VAL(ret);
 }
 
+static SDL_Window* window;
+static SDL_Surface* window_surface;
+static uint8_t board[100 * 100];
+
+static Value sdl_init_native(int arg_count, Value* args) {
+    unused(arg_count); unused(args);
+
+    if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+        runtime_error("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+    }
+
+    window = SDL_CreateWindow("SDL2 Window",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        800, 800,
+        0);
+
+    if(!window) {
+        runtime_error("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+    }
+
+    window_surface = SDL_GetWindowSurface(window);
+
+    if (!window_surface) {
+        runtime_error("Window surface could not be created! SDL_Error: %s\n", SDL_GetError());
+    }
+
+    return NULL_VAL;
+}
+
+static Value sdl_update_native(int arg_count, Value* args) {
+    unused(arg_count); unused(args);
+
+    SDL_UpdateWindowSurface(window);
+
+    return NULL_VAL;
+}
+
+static Value set_cell_native(int arg_count, Value* args) {
+    if (arg_count > 3)
+        runtime_error("Too many arguments.");
+
+    if (!IS_NUMBER(args[0]))
+        runtime_error("First argument is not a number.");
+
+    if (!IS_NUMBER(args[1]))
+        runtime_error("Second argument is not a number.");
+
+    if (!IS_NUMBER(args[2]))
+        runtime_error("Third argument is not a number.");
+
+    int x = AS_NUMBER(args[0]);
+    int y = AS_NUMBER(args[1]);
+    int value = AS_NUMBER(args[2]);
+
+    if (x < 0 || x >= 100)
+        runtime_error("First argument is out of bounds.");
+
+    if (y < 0 || y >= 100)
+        runtime_error("Second argument is out of bounds.");
+
+    board[x + y * 100] = value;
+
+    return NULL_VAL;
+}
+
+static Value get_cell_native(int arg_count, Value* args) {
+    if (arg_count > 2)
+        runtime_error("Too many arguments.");
+
+    if (!IS_NUMBER(args[0]))
+        runtime_error("First argument is not a number.");
+
+    if (!IS_NUMBER(args[1]))
+        runtime_error("Second argument is not a number.");
+
+    int x = AS_NUMBER(args[0]);
+    int y = AS_NUMBER(args[1]);
+
+    if (x < 0 || x >= 100)
+        runtime_error("First argument is out of bounds.");
+
+    if (y < 0 || y >= 100)
+        runtime_error("Second argument is out of bounds.");
+
+    return NUMBER_VAL(board[x + y * 100]);
+}
+
+static Value sdl_not_quit_native(int arg_count, Value* args) {
+    unused(arg_count); unused(args);
+
+    SDL_Event event;
+    return BOOL_VAL(SDL_PollEvent(&event) && event.type == SDL_QUIT);
+}
+
+
 /*
 static Value eval_native(int arg_count, Value* args) {    
     if (arg_count > 1)
@@ -58,16 +156,16 @@ static Value eval_native(int arg_count, Value* args) {
 static void reset_stack() {
     vm.stack_top = vm.stack;
     vm.frame_count = 0;
+    vm.open_upvalues = NULL;
 }
 
 static Value peek(int distance) {
     return vm.stack_top[-1 - distance];
 }
 
-static bool call(ObjFunction* function, int arg_count) {
-    if (arg_count != function->arity) {
-        runtime_error("Expected %d arguments but got %d.", function->arity, arg_count);
-        return false;
+static bool call(ObjClosure* closure, int arg_count) {
+    if (arg_count != closure->function->arity) {
+        runtime_error("Expected %d arguments but got %d.", closure->function->arity, arg_count);
     }
 
     if (vm.frame_count == FRAMES_MAX) {
@@ -76,31 +174,65 @@ static bool call(ObjFunction* function, int arg_count) {
     }
 
     CallFrame* frame = &vm.frames[vm.frame_count++];
-    frame->function = function;
-    frame->ip = function->chunk.code;
+    frame->closure = closure;
+    frame->ip = closure->function->chunk.code;
     frame->slots = vm.stack_top - arg_count - 1;
 
     return true;
 }
 
 static bool call_value(Value callee, int arg_count) {
-  if (IS_OBJ(callee)) {
-    switch (OBJ_TYPE(callee)) {
-    case OBJ_FUNCTION: 
-        return call(AS_FUNCTION(callee), arg_count);
-    case OBJ_NATIVE: {
-        NativeFn native = AS_NATIVE(callee);
-        Value result = native(arg_count, vm.stack_top - arg_count);
-        vm.stack_top -= arg_count + 1;
-        push(result);
-        return true;
+    if (IS_OBJ(callee)) {
+        switch (OBJ_TYPE(callee)) {
+        case OBJ_CLOSURE:
+            return call(AS_CLOSURE(callee), arg_count);
+        case OBJ_NATIVE: {
+            NativeFn native = AS_NATIVE(callee);
+            Value result = native(arg_count, vm.stack_top - arg_count);
+            vm.stack_top -= arg_count + 1;
+            push(result);
+            return true;
+        }
+        default:
+            break; // Non-callable object type.
+        }
     }
-    default:
-        break; // Non-callable object type.
+    runtime_error("Can only call functions and classes.");
+    return false;
+}
+
+static ObjUpvalue* capture_upvalue(Value* local) {
+    ObjUpvalue* prev_upvalue = NULL;
+    ObjUpvalue* upvalue = vm.open_upvalues;
+    while (upvalue != NULL && upvalue->location > local) {
+        prev_upvalue = upvalue;
+        upvalue = upvalue->next;
     }
-  }
-  runtime_error("Can only call functions and classes.");
-  return false;
+
+    if (upvalue != NULL && upvalue->location == local) {
+        return upvalue;
+    }
+
+    ObjUpvalue* created_upvalue = new_upvalue(local);
+
+    created_upvalue->next = upvalue;
+
+    if (prev_upvalue == NULL) {
+        vm.open_upvalues = created_upvalue;
+    } else {
+        prev_upvalue->next = created_upvalue;
+    }
+
+    return created_upvalue;
+}
+
+static void close_upvalues(Value* last) {
+    while (vm.open_upvalues != NULL && vm.open_upvalues->location >= last) {
+        ObjUpvalue* upvalue = vm.open_upvalues;
+        upvalue->closed = *upvalue->location;
+        upvalue->location = &upvalue->closed;
+        vm.open_upvalues = upvalue->next;
+    }
 }
 
 static bool is_falsey(Value value) {
@@ -108,8 +240,8 @@ static bool is_falsey(Value value) {
 }
 
 static void concatenate() {
-    ObjString* b = AS_STRING(pop());
-    ObjString* a = AS_STRING(pop());
+    ObjString* b = AS_STRING(peek(0));
+    ObjString* a = AS_STRING(peek(1));
 
     int length = a->length + b->length;
     char* chars = ALLOCATE(char, length + 1);
@@ -118,6 +250,8 @@ static void concatenate() {
     chars[length] = '\0';
 
     ObjString* result = take_string(chars, length);
+    pop();
+    pop();
     push(OBJ_VAL(result));
 }
 
@@ -130,7 +264,7 @@ static void runtime_error(const char* format, ...) {
 
     for (int i = vm.frame_count - 1; i >= 0; i--) {
         CallFrame* frame = &vm.frames[i];
-        ObjFunction* function = frame->function;
+        ObjFunction* function = frame->closure->function;
         size_t instruction = frame->ip - function->chunk.code - 1;
         fprintf(stderr, "[line %d] in ", function->chunk.lines[instruction]);
         if (function->name == NULL) {
@@ -157,7 +291,7 @@ static InterpretResult run() {
 
     #define READ_SHORT() (frame->ip += 2, (uint16_t) ((frame->ip[-2] << 8) | frame->ip[-1]))
 
-    #define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
+    #define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
 
     #define READ_STRING() AS_STRING(READ_CONSTANT())
 
@@ -182,7 +316,7 @@ static InterpretResult run() {
                 printf(" ]");
             }
             printf("\n");
-            disassemble_instruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code));
+            disassemble_instruction(&frame->closure->function->chunk, (int) (frame->ip - frame->closure->function->chunk.code));
         #endif
 
         uint8_t instruction;
@@ -234,6 +368,11 @@ static InterpretResult run() {
                 runtime_error("Undefined variable '%s'.", name->chars);
                 return INTERPRET_RUNTIME_ERROR;
             }
+            break;
+        }
+        case OP_GET_UPVALUE: {
+            uint8_t slot = READ_BYTE();
+            push(*frame->closure->upvalues[slot]->location);
             break;
         }
         case OP_EQUAL: {
@@ -304,8 +443,28 @@ static InterpretResult run() {
             frame = &vm.frames[vm.frame_count - 1];
             break;
         }
+        case OP_CLOSURE: {
+            ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
+            ObjClosure* closure = new_closure(function);
+            push(OBJ_VAL(closure));
+            for (int i = 0; i < closure->upvalue_count; i++) {
+                uint8_t is_local = READ_BYTE();
+                uint8_t index = READ_BYTE();
+                if (is_local) {
+                    closure->upvalues[i] = capture_upvalue(frame->slots + index);
+                } else {
+                    closure->upvalues[i] = frame->closure->upvalues[index];
+                }
+            }
+            break;
+        }
+        case OP_CLOSE_UPVALUE:
+            close_upvalues(vm.stack_top - 1);
+            pop();
+            break;
         case OP_RETURN: {
             Value result = pop();
+            close_upvalues(frame->slots);
             vm.frame_count--;
             if (vm.frame_count == 0) {
                 pop();
@@ -333,12 +492,23 @@ static InterpretResult run() {
 void init_vm() {
     reset_stack();
     vm.objects = NULL;
+    vm.bytes_allocated = 0;
+    vm.next_gc = 1024 * 1024;
+
+    vm.gray_count = 0;
+    vm.gray_capacity = 0;
+    vm.gray_stack = NULL;
+
     init_table(&vm.globals);
     init_table(&vm.strings);
 
     define_native("clock", clock_native);
     define_native("read", read_native);
-    //define_native("eval", eval_native);
+    define_native("sdl_init", sdl_init_native);
+    define_native("sdl_update", sdl_update_native);
+    define_native("sdl_not_quit", sdl_not_quit_native);
+    define_native("set_cell", set_cell_native);
+    define_native("get_cell", get_cell_native);
 }
 
 void free_vm() {
@@ -362,7 +532,10 @@ InterpretResult interpret(const char* source) {
     if (function == NULL) return INTERPRET_COMPILE_ERROR;
 
     push(OBJ_VAL(function));
-    call(function, 0);
+    ObjClosure* closure = new_closure(function);
+    pop();
+    push(OBJ_VAL(closure));
+    call(closure, 0);
 
     return run();
 }

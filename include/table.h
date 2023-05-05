@@ -38,6 +38,10 @@ void table_add_all(Table* from, Table* to);
 // find the string in the given hash table.
 ObjString* table_find_string(Table* table, const char* chars, int length, uint32_t hash);
 
+void table_remove_white(Table* table);
+
+void mark_table(Table* table);
+
 // delete the key-value pair associated with the given key from the given hash table.
 bool table_delete(Table* table, ObjString* key);
 

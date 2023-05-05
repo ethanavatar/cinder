@@ -16,6 +16,8 @@ OPTIMIZATION=-O0
 #  -std=c99 specifies that the code should be compiled according to the C99 standard
 CFLAGS=-I$(IDIR) -g -Wall -Wextra -Werror -Wpedantic -std=c99 $(OPTIMIZATION)
 
+LINKER_FLAGS=-lm -lpthread -lSDL2 -lSDL2main
+
 # the object files to include in the executable
 OBJ=./obj/main.o		\
 	./obj/scanner.o 	\
@@ -32,8 +34,8 @@ OBJ=./obj/main.o		\
 # the executable file to create
 TARGET=./out/prog.elf
 
-prog: $(OBJ)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ)
+prog: $(OBJ) ./obj/vm.o
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ) $(LINKER_FLAGS)
 
 ./obj/%.o: ./src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
