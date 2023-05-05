@@ -24,6 +24,22 @@ static Value clock_native(int arg_count, Value* args) {
     return NUMBER_VAL((double) clock() / CLOCKS_PER_SEC);
 }
 
+static Value rand_native(int arg_count, Value* args) {
+    if (arg_count > 1)
+        runtime_error("Too many arguments.");
+
+    if (!IS_NUMBER(args[0]))
+        runtime_error("First argument is not a number.");
+
+    int max = AS_NUMBER(args[0]);
+
+    int upper = max;
+    int lower = 0;
+
+    int num = (rand() % (upper - lower + 1)) + lower;
+    return NUMBER_VAL(num);
+}
+
 static Value read_native(int arg_count, Value* args) {
     if (arg_count > 1)
         runtime_error("Too many arguments.");
@@ -39,21 +55,38 @@ static Value read_native(int arg_count, Value* args) {
     return OBJ_VAL(ret);
 }
 
+#define BOARD_SIZE 80
 static SDL_Window* window;
 static SDL_Surface* window_surface;
-static uint8_t board[100 * 100];
+static uint8_t board[BOARD_SIZE * BOARD_SIZE];
 
 static Value sdl_init_native(int arg_count, Value* args) {
-    unused(arg_count); unused(args);
+    
+    if (arg_count > 3)
+        runtime_error("Too many arguments.");
+
+    if (!IS_NUMBER(args[0]))
+        runtime_error("First argument is not a number.");
+
+    if (!IS_NUMBER(args[1]))
+        runtime_error("Second argument is not a number.");
+
+    if (!IS_STRING(args[2]))
+        runtime_error("Third argument is not a number.");
+
+    int width = AS_NUMBER(args[0]);
+    int height = AS_NUMBER(args[1]);
+
+    char* title = AS_CSTRING(args[2]);
 
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
         runtime_error("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
     }
 
-    window = SDL_CreateWindow("SDL2 Window",
+    window = SDL_CreateWindow(title,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        800, 800,
+        width, height,
         0);
 
     if(!window) {
@@ -69,10 +102,60 @@ static Value sdl_init_native(int arg_count, Value* args) {
     return NULL_VAL;
 }
 
+static Value sdl_clear_native(int arg_count, Value* args) {
+    unused(arg_count); unused(args);
+
+    SDL_FillRect(window_surface, NULL, SDL_MapRGB(window_surface->format, 0x00, 0x00, 0x00));
+
+    return NULL_VAL;
+}
+
 static Value sdl_update_native(int arg_count, Value* args) {
     unused(arg_count); unused(args);
 
     SDL_UpdateWindowSurface(window);
+
+    return NULL_VAL;
+}
+
+static Value sdl_is_not_quit_native(int arg_count, Value* args) {
+    unused(arg_count); unused(args);
+
+    SDL_Event event;
+    SDL_PollEvent(&event);
+    return BOOL_VAL(event.type != SDL_QUIT);
+}
+
+static Value sdl_quit_native(int arg_count, Value* args) {
+    unused(arg_count); unused(args);
+
+    SDL_Quit();
+    return NULL_VAL;
+}
+
+static Value sdl_draw_rect_native(int arg_count, Value* args) {
+    if (arg_count > 4)
+        runtime_error("Too many arguments.");
+
+    if (!IS_NUMBER(args[0]))
+        runtime_error("First argument is not a number.");
+
+    if (!IS_NUMBER(args[1]))
+        runtime_error("Second argument is not a number.");
+
+    if (!IS_NUMBER(args[2]))
+        runtime_error("Third argument is not a number.");
+
+    if (!IS_NUMBER(args[3]))
+        runtime_error("Fourth argument is not a number.");
+
+    int x = AS_NUMBER(args[0]);
+    int y = AS_NUMBER(args[1]);
+    int w = AS_NUMBER(args[2]);
+    int h = AS_NUMBER(args[3]);
+
+    SDL_Rect rect = {x, y, w, h};
+    SDL_FillRect(window_surface, &rect, SDL_MapRGB(window_surface->format, 0xFF, 0xFF, 0xFF));
 
     return NULL_VAL;
 }
@@ -94,13 +177,13 @@ static Value set_cell_native(int arg_count, Value* args) {
     int y = AS_NUMBER(args[1]);
     int value = AS_NUMBER(args[2]);
 
-    if (x < 0 || x >= 100)
+    if (x < 0 || x >= BOARD_SIZE)
         runtime_error("First argument is out of bounds.");
 
-    if (y < 0 || y >= 100)
+    if (y < 0 || y >= BOARD_SIZE)
         runtime_error("Second argument is out of bounds.");
 
-    board[x + y * 100] = value;
+    board[x + y * BOARD_SIZE] = value;
 
     return NULL_VAL;
 }
@@ -118,21 +201,16 @@ static Value get_cell_native(int arg_count, Value* args) {
     int x = AS_NUMBER(args[0]);
     int y = AS_NUMBER(args[1]);
 
-    if (x < 0 || x >= 100)
+    if (x < 0 || x >= BOARD_SIZE)
         runtime_error("First argument is out of bounds.");
 
-    if (y < 0 || y >= 100)
+    if (y < 0 || y >= BOARD_SIZE)
         runtime_error("Second argument is out of bounds.");
 
-    return NUMBER_VAL(board[x + y * 100]);
+    return NUMBER_VAL(board[x + y * BOARD_SIZE]);
 }
 
-static Value sdl_not_quit_native(int arg_count, Value* args) {
-    unused(arg_count); unused(args);
 
-    SDL_Event event;
-    return BOOL_VAL(SDL_PollEvent(&event) && event.type == SDL_QUIT);
-}
 
 
 /*
@@ -502,13 +580,21 @@ void init_vm() {
     init_table(&vm.globals);
     init_table(&vm.strings);
 
+    srand(time(NULL));
+
     define_native("clock", clock_native);
+    define_native("random", rand_native);
     define_native("read", read_native);
     define_native("sdl_init", sdl_init_native);
     define_native("sdl_update", sdl_update_native);
-    define_native("sdl_not_quit", sdl_not_quit_native);
+    define_native("sdl_is_not_quit", sdl_is_not_quit_native);
+    define_native("sdl_quit", sdl_quit_native);
+    define_native("sdl_draw_rect", sdl_draw_rect_native);
+    define_native("sdl_clear", sdl_clear_native);
+
     define_native("set_cell", set_cell_native);
     define_native("get_cell", get_cell_native);
+    //define_native("init_board", init_board_native);
 }
 
 void free_vm() {

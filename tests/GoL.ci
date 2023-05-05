@@ -1,0 +1,94 @@
+
+let board_width = 80;
+let board_height = 80;
+let cell_size = 10;
+
+def draw_cell(x, y) {
+    sdl_draw_rect(x * cell_size, y * cell_size, cell_size, cell_size);
+}
+
+def random_board() {
+    for (let i = 0; i < board_width; i = i + 1) {
+        for (let j = 0; j < board_height; j = j + 1) {
+            let state = random(1);
+            print state;
+            if (state == 1) {
+                set_cell(i, j, 1);
+                draw_cell(i, j);
+            }
+        }
+    }
+}
+
+def neighbour_check(x, y) {
+    if (x < 0) {
+        return 0;
+    }
+    if (y < 0) {
+        return 0;
+    }
+    if (x >= board_width) {
+        return 0;
+    }
+    if (y >= board_height) {
+        return 0;
+    }
+
+    let cell = get_cell(x, y);
+    if (cell == 1) {
+        return 1;
+    }
+
+    return 0;
+}
+
+def get_neighbours(x, y) {
+    let neighbours = 0;
+
+    for (let i = -1; i < 2; i = i + 1) {
+        for (let j = -1; j < 2; j = j + 1) {
+            let new = neighbour_check(x + i, y + j);
+            neighbours = neighbours + new;
+        }
+    }
+
+    return neighbours;
+}
+
+def run() {
+    for (let i = 0; i < board_width; i = i + 1) {
+        for (let j = 0; j < board_height; j = j + 1) {
+            let cell = get_cell(i, j);
+            let neighbours = get_neighbours(i, j);
+
+            if (cell == 1) {
+                if (neighbours < 2) {
+                    set_cell(i, j, 0);
+                } else if (neighbours > 3) {
+                    set_cell(i, j, 0);
+                }
+            } else {
+                if (neighbours == 2) {
+                    set_cell(i, j, 1);
+                    draw_cell(i, j);
+                } else if (neighbours == 3) {
+                    set_cell(i, j, 1);
+                    draw_cell(i, j);
+                }
+            }
+        }
+    }
+}
+
+sdl_init(board_width * cell_size, board_height * cell_size, "Game of Life");
+random_board();
+
+while (sdl_is_not_quit()) {
+
+    run();
+
+    sdl_update();
+    sdl_clear();
+}
+
+sdl_quit();
