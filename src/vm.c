@@ -59,6 +59,7 @@ static Value read_native(int arg_count, Value* args) {
 static SDL_Window* window;
 static SDL_Surface* window_surface;
 static uint8_t board[BOARD_SIZE * BOARD_SIZE];
+static uint8_t board2[BOARD_SIZE * BOARD_SIZE];
 
 static Value sdl_init_native(int arg_count, Value* args) {
     
@@ -173,17 +174,17 @@ static Value set_cell_native(int arg_count, Value* args) {
     if (!IS_NUMBER(args[2]))
         runtime_error("Third argument is not a number.");
 
-    int x = AS_NUMBER(args[0]);
-    int y = AS_NUMBER(args[1]);
+    int row = AS_NUMBER(args[0]);
+    int col = AS_NUMBER(args[1]);
     int value = AS_NUMBER(args[2]);
 
-    if (x < 0 || x >= BOARD_SIZE)
+    if (row < 0 || row >= BOARD_SIZE)
         runtime_error("First argument is out of bounds.");
 
-    if (y < 0 || y >= BOARD_SIZE)
+    if (col < 0 || col >= BOARD_SIZE)
         runtime_error("Second argument is out of bounds.");
 
-    board[x + y * BOARD_SIZE] = value;
+    board2[row * BOARD_SIZE + col] = value;
 
     return NULL_VAL;
 }
@@ -198,16 +199,32 @@ static Value get_cell_native(int arg_count, Value* args) {
     if (!IS_NUMBER(args[1]))
         runtime_error("Second argument is not a number.");
 
-    int x = AS_NUMBER(args[0]);
-    int y = AS_NUMBER(args[1]);
+    int row = AS_NUMBER(args[0]);
+    int col = AS_NUMBER(args[1]);
 
-    if (x < 0 || x >= BOARD_SIZE)
+    if (row < 0 || row >= BOARD_SIZE)
         runtime_error("First argument is out of bounds.");
 
-    if (y < 0 || y >= BOARD_SIZE)
+    if (col < 0 || col >= BOARD_SIZE)
         runtime_error("Second argument is out of bounds.");
 
-    return NUMBER_VAL(board[x + y * BOARD_SIZE]);
+    int num = board[row * BOARD_SIZE + col];
+
+    return NUMBER_VAL(num);
+}
+
+static Value push_board_native(int arg_count, Value* args) {
+    unused(arg_count); unused(args);
+
+    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        board[i] = board2[i];
+    }
+    
+    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        board2[i] = 0;
+    }
+
+    return NULL_VAL;
 }
 
 
@@ -583,6 +600,7 @@ void init_vm() {
     srand(time(NULL));
 
     define_native("clock", clock_native);
+    //define_native("sleep", sleep_native);
     define_native("random", rand_native);
     define_native("read", read_native);
     define_native("sdl_init", sdl_init_native);
@@ -594,6 +612,7 @@ void init_vm() {
 
     define_native("set_cell", set_cell_native);
     define_native("get_cell", get_cell_native);
+    define_native("push_board", push_board_native);
     //define_native("init_board", init_board_native);
 }
 
