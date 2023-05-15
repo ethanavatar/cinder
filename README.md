@@ -9,7 +9,6 @@ Treat this language as a toy in its current state, as it is unfinished and untes
 ## Example
 
 [tests/native_time.ci](./tests/native_time.ci)
-
 ---
 
 ```Rust
