@@ -1,11 +1,16 @@
 # the compiler to use
-CC = clang
+CC = gcc
 
 # include directory for header files
 IDIR=./include
 
-# optimization level
-OPTIMIZATION=-O0
+DEBUG=1
+
+ifeq ($(DEBUG), 1)
+	OPTIMIZATION=-g -O0
+else
+	OPTIMIZATION=-O3
+endif
 
 # compiler flags:
 #  -g adds debugging information to the executable file
@@ -14,7 +19,7 @@ OPTIMIZATION=-O0
 #  -Werror turns all warnings into errors
 #  -Wpedantic turns on pedantic warnings
 #  -std=c99 specifies that the code should be compiled according to the C99 standard
-CFLAGS=-I$(IDIR) -g -Wall -Wextra -Werror -Wpedantic -std=c99 $(OPTIMIZATION)
+CFLAGS=-I$(IDIR) -Wall -Wextra -Werror -Wpedantic -std=c99 $(OPTIMIZATION)
 
 LINKER_FLAGS=-lm -lpthread -lSDL2 -lSDL2main
 
@@ -32,7 +37,7 @@ OBJ=./obj/main.o		\
 	./obj/fileIO.o
 
 # the executable file to create
-TARGET=./out/prog.elf
+TARGET=./out/cinder
 
 prog: $(OBJ) ./obj/vm.o
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ) $(LINKER_FLAGS)

@@ -157,13 +157,14 @@ static TokenType identifier_type() {
     case 'p': return check_keyword(1, 4, "rint", TOKEN_PRINT);
     case 'r': return check_keyword(1, 5, "eturn", TOKEN_RETURN);
     case 's': return check_keyword(1, 4, "uper", TOKEN_SUPER);
-    case 't':
+    case 't': 
         if (scanner.current - scanner.start > 1) {
             switch (scanner.start[1]) {
             case 'h': return check_keyword(2, 2, "is", TOKEN_THIS);
             case 'r': return check_keyword(2, 2, "ue", TOKEN_TRUE);
             }
         }
+        break;
     case 'w': return check_keyword(1, 4, "hile", TOKEN_WHILE);
     }
 
